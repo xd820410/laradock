@@ -181,6 +181,7 @@ services:
         - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
         - docker-in-docker:/certs/client
         - ./php-worker/supervisord.d:/etc/supervisord.d
+        - ~/.ssh:/root/.ssh:ro
       extra_hosts:
         - "dockerhost:${DOCKER_HOST_IP}"
       ports:
@@ -591,8 +592,7 @@ services:
           - no_proxy
           - MARIADB_VERSION=${MARIADB_VERSION}
       volumes:
-        #- ${DATA_PATH_HOST}/mariadb:/var/lib/mysql
-        - mariadb:/var/lib/mysql
+        - ${DATA_PATH_HOST}/mariadb:/var/lib/mysql
         - ${MARIADB_ENTRYPOINT_INITDB}:/docker-entrypoint-initdb.d
       ports:
         - "${MARIADB_PORT}:3306"
