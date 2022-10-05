@@ -24,6 +24,10 @@ server {
          try_files $uri $uri/ /index.php$is_args$args;
     }
 
+    location ~ ^/wp-json/ {
+        rewrite ^/wp-json/(.*?)$ /?rest_route=/$1 last;
+    }
+
     location ~ \.php$ {
         try_files $uri /index.php =404;
         fastcgi_pass php-fpm80:9000;
