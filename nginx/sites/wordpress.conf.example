@@ -5,6 +5,63 @@
 #}
 
 server {
+    listen 443 ssl;
+    listen [::]:443 ssl ipv6only=on;
+    ssl_certificate /etc/nginx/ssl/test.uv100.com.crt;
+    ssl_certificate_key /etc/nginx/ssl/test.uv100.com.key;
+
+    server_name test.uv100.com;
+    # root /var/www/uv100;
+
+    # index index.php index.html index.htm;
+
+    # location / {
+    #      try_files $uri $uri/ /index.php$is_args$args;
+    # }
+
+    # location ~ ^/wp-json/ {
+    #     rewrite ^/wp-json/(.*?)$ /?rest_route=/$1 last;
+    # }
+
+    # location ~ \.php$ {
+    #     try_files $uri /index.php =404;
+    #     fastcgi_pass php-fpm80:9000;
+    #     fastcgi_index index.php;
+    #     fastcgi_buffers 16 16k;
+    #     fastcgi_buffer_size 32k;
+    #     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    #     #fixes timeouts
+    #     fastcgi_read_timeout 600;
+    #     include fastcgi_params;
+    # }
+
+    # location ~ /\.ht {
+    #     deny all;
+    # }
+
+    # location /.well-known/acme-challenge/ {
+    #     root /var/www/letsencrypt/;
+    #     log_not_found off;
+    # }
+
+    location / {
+        proxy_ssl_name "test.uv100.com";
+        proxy_ssl_server_name on;
+        proxy_pass https://test.uv100.com:4433;
+        proxy_ssl_certificate /etc/nginx/ssl/test.uv100.com.crt;
+        proxy_ssl_certificate_key /etc/nginx/ssl/test.uv100.com.key;
+
+        # 把 IP、Protocol 等 header 都一起送給反向代理的 server
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+
+        error_log /var/log/nginx/nginx_proxy_error.log;
+        access_log /var/log/nginx/nginx_proxy_access.log;
+    }
+}
+
+server {
 
     listen 80;
     listen [::]:80;

@@ -1,2 +1,2 @@
 #!/bin/bash
-docker-compose up -d mariadb redis php-fpm nginx workspace
+docker-compose up -d mariadb redis php-fpm nginx workspace apache2
