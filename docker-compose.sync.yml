@@ -1,8 +1,29 @@
 version: '3.5'
 
 services:
+  workspace:
+    volumes:
+      - applications-sync:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+  php-fpm:
+    volumes:
+      - applications-sync:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+  php-fpm80:
+    volumes:
+      - applications-sync:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+  php-fpm74:
+    volumes:
+      - applications-sync:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+  php-worker:
+    volumes:
+      - applications-sync:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+  nginx:
+    volumes:
+      - applications-sync:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+  apache2:
+    volumes:
+      - applications-sync:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
 
 volumes:
   applications-sync:
-    external:
-      name: "applications-docker-sync"
+    external: true
+    name: "applications-docker-sync"
