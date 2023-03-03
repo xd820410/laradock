@@ -1801,3 +1801,5 @@ RUN apt-get clean && \
 
 # Set default work directory
 WORKDIR /var/www
+
+RUN cd /var && chmod -R 777 www
