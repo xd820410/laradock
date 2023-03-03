@@ -17,7 +17,7 @@ ENV LOG_STDOUT=/var/log/apache2/access.log
 
 ENV LOG_STDERR=/var/log/apache2/error.log
 
-EXPOSE 80 443
+EXPOSE 80 443 8888 4433
 
 WORKDIR /var/www/
 

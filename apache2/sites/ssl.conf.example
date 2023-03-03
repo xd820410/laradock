@@ -1,23 +1,15 @@
-<VirtualHost *:8888>
-    ServerName test.uv100.com:8888
-    ServerAlias test.uv100.com:8888
-
-    RewriteEngine On
-    RewriteCond %{HTTPS} !on
-    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-</VirtualHost>
+Listen 4433
 
 <VirtualHost *:4433>
-    ServerName test.uv100.com:4433
-    ServerAlias test.uv100.com:4433
-    DocumentRoot /var/www/uv100/
+    ServerName test.uv100.com
+    DocumentRoot /var/www/uv100
     Options -Indexes +FollowSymLinks
 
     SSLEngine on
     SSLCertificateFile /etc/apache2/ssl/test.uv100.com.crt
     SSLCertificateKeyFile /etc/apache2/ssl/test.uv100.com.key
 
-    <Directory "/var/www/uv100/">
+    <Directory "/var/www/uv100">
       Options -Indexes +FollowSymLinks
       DirectoryIndex index.php
       AllowOverride All

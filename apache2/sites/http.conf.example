@@ -1,0 +1,22 @@
+Listen 8888
+
+<VirtualHost *:8888>
+    ServerName dev-cfd.test.com
+    DocumentRoot /var/www/cfd
+    Options -Indexes +FollowSymLinks
+
+    <Directory "/var/www/cfd">
+      Options -Indexes +FollowSymLinks
+      DirectoryIndex index.php
+      AllowOverride All
+      <IfVersion < 2.4>
+        Allow from all
+      </IfVersion>
+      <IfVersion >= 2.4>
+        Require all granted
+      </IfVersion>
+    </Directory>
+
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+</VirtualHost>
