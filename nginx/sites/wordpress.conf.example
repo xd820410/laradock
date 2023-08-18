@@ -34,6 +34,7 @@ server {
         proxy_ssl_server_name on;
         proxy_pass https://test.uv100.com:4433;
         # proxy_redirect https://test.uv100.com:4433/;
+        proxy_read_timeout 3600;
         proxy_ssl_certificate /etc/nginx/ssl/test.uv100.com.crt;
         proxy_ssl_certificate_key /etc/nginx/ssl/test.uv100.com.key;
 
@@ -52,6 +53,79 @@ server {
     listen 80;
     listen [::]:80;
 
+    server_name dev-twsemi.test.back twsemi.test.back;
+    root /var/www/twsemi;
+
+    index index.php index.html index.htm;
+
+    #台灣半導體需求，特定path指去laravel
+    location ~ ^/services/ {
+        root /var/www/$project/laravel/public;
+        try_files $uri $uri/ /laravel/public/index.php$is_args$args;
+    }
+
+    location ~ /laravel/public/index.php$ {
+        try_files $uri /index.php =404;
+        fastcgi_pass php-upstream;
+        fastcgi_index index.php;
+        fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        #fixes timeouts
+        fastcgi_read_timeout 600;
+        include fastcgi_params;
+    }
+
+    location ~ /laravel {
+        deny all;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ ^/wp-json/ {
+        if ($request_method = OPTIONS) {
+            add_header Access-Control-Allow-Origin *;
+            add_header Access-Control-Allow-Methods POST,GET,OPTIONS,PUT,DELETE;
+            add_header Access-Control-Allow-Headers *;
+            add_header Access-Control-Max-Age 86400;
+
+            return 204;
+        }
+
+        rewrite ^/wp-json/(.*?)$ /?rest_route=/$1 last;
+    }
+
+    location ~ \.php$ {
+        try_files $uri /index.php =404;
+        fastcgi_pass php-upstream;
+        fastcgi_index index.php;
+        fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        #fixes timeouts
+        fastcgi_read_timeout 600;
+        include fastcgi_params;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt/;
+        log_not_found off;
+    }
+
+    error_log /var/log/nginx/wordpress_error.log;
+    access_log /var/log/nginx/wordpress_access.log;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+
     # For https
     # listen 443 ssl;
     # listen [::]:443 ssl ipv6only=on;
@@ -64,10 +138,36 @@ server {
     index index.php index.html index.htm;
 
     location / {
-         try_files $uri $uri/ /index.php$is_args$args;
+        set $flag 0;
+        if ($request_method = OPTIONS) {
+            set $flag "${flag}1";
+        }
+        if ($args ~ 'wc-ajax=checkout') {
+                set $flag "${flag}1";
+        }
+        
+        if ($flag = '011') {
+            add_header Access-Control-Allow-Origin *;
+            add_header Access-Control-Allow-Methods *;
+            add_header Access-Control-Allow-Headers x-xsrf-token;
+            add_header Access-Control-Max-Age 86400;
+
+            return 204;
+        }
+
+        try_files $uri $uri/ /index.php$is_args$args;
     }
 
     location ~ ^/wp-json/ {
+        if ($request_method = OPTIONS) {
+            add_header Access-Control-Allow-Origin *;
+            add_header Access-Control-Allow-Methods POST,GET,OPTIONS,PUT,DELETE;
+            add_header Access-Control-Allow-Headers *;
+            add_header Access-Control-Max-Age 86400;
+
+            return 204;
+        }
+
         rewrite ^/wp-json/(.*?)$ /?rest_route=/$1 last;
     }
 
@@ -95,4 +195,23 @@ server {
 
     error_log /var/log/nginx/wordpress_error.log;
     access_log /var/log/nginx/wordpress_access.log;
+}
+
+server {
+    listen 80;
+    server_name dev-twsemi.test.com;
+
+    location / {
+        proxy_pass http://dev-twsemi.test.com:8888;
+
+        # 把 IP、Protocol 等 header 都一起送給反向代理的 server
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_set_header Host $host;
+
+        error_log /var/log/nginx/nginx_proxy_error.log;
+        access_log /var/log/nginx/nginx_proxy_access.log;
+    }
 }
