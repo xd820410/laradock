@@ -1312,6 +1312,132 @@ RUN if [ ${INSTALL_ZMQ} = true ]; then \
     && echo "extension=zmq.so" > /usr/local/etc/php/conf.d/zmq.ini \
 ;fi
 
+############################################################################
+## puppeteer:
+############################################################################
+USER root
+
+# 添加多架構支持
+RUN dpkg --add-architecture amd64
+
+# 更新源並安裝必要的工具
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    wget \
+    gnupg \
+    software-properties-common \
+    apt-transport-https \
+    && rm -rf /var/lib/apt/lists/*
+
+# 添加 Google Chrome 源
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+
+# 安裝 NVM
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# 設置 NVM 環境
+ENV NVM_DIR /root/.nvm
+RUN . "$NVM_DIR/nvm.sh" && \
+    nvm install 22.5.1 && \
+    nvm alias default 22.5.1 && \
+    nvm use default
+
+# 設置 NODE_PATH 和 PATH
+ENV NODE_PATH $NVM_DIR/versions/node/v22.5.1/lib/node_modules
+ENV PATH      $NVM_DIR/versions/node/v22.5.1/bin:$PATH
+
+# 安裝 Puppeteer
+RUN npm install --global puppeteer
+
+# 安裝所有必要的套件
+RUN apt-get update && apt-get install -y --no-install-recommends --allow-downgrades \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libc6 \
+    libcairo2 \
+    libcups2 \
+    libcurl3-gnutls \
+    libcurl4 \
+    libdbus-1-3 \
+    libdrm2 \
+    libexpat1 \
+    libgbm1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libgtk-4-1 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libvulkan1 \
+    libx11-6 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+    libgcc1 \
+    libstdc++6 \
+    libxcursor1 \
+    libxi6 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    libappindicator3-1 \
+    lsb-release \
+    xdg-utils \
+    libgbm-dev \
+    libgconf-2-4 \
+    libgdk-pixbuf2.0-0 \
+    libnss3-dev \
+    libxss-dev \
+    fonts-liberation \
+    libappindicator1 \
+    libasound2 \
+    libatk1.0-0 \
+    libc6 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libexpat1 \
+    libfontconfig1 \
+    libgcc1 \
+    libgconf-2-4 \
+    libgdk-pixbuf2.0-0 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libstdc++6 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN chown -R www-data:www-data $NVM_DIR
+RUN chmod -R 755 $NVM_DIR
+RUN chmod -R 1777 /tmp
+
+# 設置環境變量
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/google-chrome-stable
 
 ############################################################################
 ## Event:
