@@ -1,0 +1,161 @@
+#server {
+#    listen 80;
+#    server_name laravel.com.co;
+#    return 301 https://laravel.com.co$request_uri;
+#}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    ssl_certificate /etc/nginx/ssl/auto-redeem.wakeup-design.shop.crt;
+    ssl_certificate_key /etc/nginx/ssl/auto-redeem.wakeup-design.shop.key;
+
+    server_name auto-redeem.wakeup-design.shop;
+
+    location / {
+        proxy_ssl_name "auto-redeem.wakeup-design.shop";
+        proxy_ssl_server_name on;
+        proxy_pass https://auto-redeem.wakeup-design.shop:4433;
+        # proxy_redirect https://test.uv100.com:4433/;
+        proxy_read_timeout 3600;
+        proxy_ssl_certificate /etc/nginx/ssl/auto-redeem.wakeup-design.shop.crt;
+        proxy_ssl_certificate_key /etc/nginx/ssl/auto-redeem.wakeup-design.shop.key;
+
+        # 把 IP、Protocol 等 header 都一起送給反向代理的 server
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_set_header Host $host;
+
+        error_log /var/log/nginx/nginx_proxy_error.log;
+        access_log /var/log/nginx/nginx_proxy_access.log;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    ssl_certificate /etc/nginx/ssl/enterprise-system.wakeup-design.shop.crt;
+    ssl_certificate_key /etc/nginx/ssl/enterprise-system.wakeup-design.shop.key;
+
+    server_name enterprise-system.wakeup-design.shop;
+
+    location / {
+        proxy_ssl_name "enterprise-system.wakeup-design.shop";
+        proxy_ssl_server_name on;
+        proxy_pass https://enterprise-system.wakeup-design.shop:4433;
+        proxy_read_timeout 3600;
+        proxy_ssl_certificate /etc/nginx/ssl/enterprise-system.wakeup-design.shop.crt;
+        proxy_ssl_certificate_key /etc/nginx/ssl/enterprise-system.wakeup-design.shop.key;
+
+        # 把 IP、Protocol 等 header 都一起送給反向代理的 server
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_set_header Host $host;
+
+        error_log /var/log/nginx/nginx_proxy_error.log;
+        access_log /var/log/nginx/nginx_proxy_access.log;
+    }
+}
+
+server {
+
+    listen 80;
+    listen [::]:80;
+
+    # For https
+    # listen 443 ssl;
+    # listen [::]:443 ssl ipv6only=on;
+    # ssl_certificate /etc/nginx/ssl/default.crt;
+    # ssl_certificate_key /etc/nginx/ssl/default.key;
+
+    server_name ~^api-dev-(?<project>.+)\.test\.com;
+    root /var/www/$project/public;
+    index index.php index.html index.htm;
+
+    location / {
+         try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        try_files $uri /index.php =404;
+        fastcgi_pass php-upstream;
+        fastcgi_index index.php;
+        fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        #fixes timeouts
+        fastcgi_read_timeout 7200;
+        include fastcgi_params;
+    }
+
+    location ~ /app/(?<reverbkey>.*) {
+        proxy_pass http://0.0.0.0:8080/app/$reverbkey;
+        proxy_http_version 1.1;
+        proxy_set_header Host $http_host;
+        proxy_set_header Scheme $scheme;
+        proxy_set_header SERVER_PORT $server_port;
+        proxy_set_header REMOTE_ADDR $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+    }
+
+    location ~ ^/apps/(?<reverbid>[^/]+)/events$ {
+        proxy_pass http://0.0.0.0:8080/apps/$reverbid/events;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt/;
+        log_not_found off;
+    }
+
+    error_log /var/log/nginx/laravel_error.log;
+    access_log /var/log/nginx/laravel_access.log;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name ~^api-dev-(?<project>.+)\.test\.com;
+    root /var/www/$project/public;
+    index index.php index.html index.htm;
+
+    location / {
+         try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        try_files $uri /index.php =404;
+        fastcgi_pass php-upstream;
+        fastcgi_index index.php;
+        fastcgi_buffers 16 16k;
+        fastcgi_buffer_size 32k;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        #fixes timeouts
+        fastcgi_read_timeout 7200;
+        include fastcgi_params;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt/;
+        log_not_found off;
+    }
+
+    error_log /var/log/nginx/laravel_error.log;
+    access_log /var/log/nginx/laravel_access.log;
+}
