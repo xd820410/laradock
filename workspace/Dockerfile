@@ -857,7 +857,6 @@ COPY ./.npmrc /home/laradock/.npmrc
 
 USER root
 RUN apt-get update && apt-get install -y \
-    libgconf-2-4 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
     libgdk-pixbuf2.0-0 \
@@ -865,7 +864,7 @@ RUN apt-get update && apt-get install -y \
     libgbm-dev \
     libnss3-dev \
     libxss-dev \
-    libasound2
+    libasound2t64
 
 RUN npm install --global puppeteer
 
