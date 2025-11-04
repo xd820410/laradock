@@ -3,7 +3,7 @@ FROM postgres:${POSTGRES_VERSION}
 
 RUN apk update && \
     apk add git && \
-    git clone --branch v0.8.0 https://github.com/pgvector/pgvector.git && \
+    git clone --branch v0.8.1 https://github.com/pgvector/pgvector.git && \
     cd pgvector && \
     apk add build-base && \
     apk add clang19 && \
